@@ -24,21 +24,21 @@ class Counter:
 class MCM:
     def __init__(self,device=None,**kwargs):
         super().__init__()
-        self.exe = kwargs.get('exe','cacli.exe')
-        self.server = kwargs.get('server',False)
-        self.verbose = kwargs.get('verbose',False)
+        self.__exe = kwargs.get('exe','cacli.exe')
+        self.__server = kwargs.get('server',False)
+        self.__verbose = kwargs.get('verbose',False)
         self._check_cacli()
-        self.settings = {
+        self.__settings = {
             'frequency':{'1':100,'2':100},
             'step_size':{'1':100,'2':100},
             'temperature':{'1':293,'2':293},
             'steps':{'1':100,'2':100},
             'profile':{'1':'PROFILE1','2':'PROFILE1'},
             }
-        self.command_log = {}
-        self.counter = Counter()
-        self.device = device
-        self.servodrive_enabled = False
+        self.__command_log = {}
+        self.__counter = Counter()
+        self.__device = device
+        self.__servodrive_enabled = False
         
         
     def _check_cacli(self):
@@ -46,9 +46,9 @@ class MCM:
         checks path to cacli.exe; raises error if not a file
         '''
         try:
-            assert os.path.isfile(self.exe) == True
+            assert os.path.isfile(self.__exe) == True
         except:
-            raise CacliError('could not find file at {}'.format(self.exe))
+            raise CacliError('could not find file at {}'.format(self.__exe))
 
             
     def _run(self,*command_list):
@@ -61,18 +61,18 @@ class MCM:
         
         will only output from functions with reply handler in response.py
         '''
-        subprocess_parameters = [self.exe]
-        if self.server == True:
-            if self.device == None:
+        subprocess_parameters = [self.__exe]
+        if self.__server == True:
+            if self.__device == None:
                 subprocess_parameters.append('@SERV')
-            elif self.device != None:
-                subprocess_parameters.append('@SERV:{}'.format(self.device))
-        elif self.device != None:
-            subprocess_parameters.append('@{}'.format(self.device))
+            elif self.__device != None:
+                subprocess_parameters.append('@SERV:{}'.format(self.__device))
+        elif self.__device != None:
+            subprocess_parameters.append('@{}'.format(self.__device))
         subprocess_parameters += command_list
         
-        i = self.counter
-        self.command_log[i] = {'parameters':subprocess_parameters, 'commands':command_list}
+        i = self.__counter
+        self.__command_log[i] = {'parameters':subprocess_parameters, 'commands':command_list}
         response = subprocess.run(subprocess_parameters,
                             stdout = subprocess.PIPE,
                             stderr = subprocess.PIPE,
@@ -90,17 +90,17 @@ class MCM:
         '''
         stdout = response.stdout.strip()
         stderr = response.stderr.strip()
-        if self.verbose:
+        if self.__verbose:
             print('args: {}\nstdout: {}\nstderr:{}'.format(response.args,response.stdout.strip(),response.stderr.strip()))
             
         self.__check_error(response,stdout)
-        this_command_log = self.command_log.pop(i)
+        this_command_log = self.__command_log.pop(i)
         
         # check that the parameters from the log match the parameters from the response
         assert this_command_log['parameters'] == response.args
         
         request_type = this_command_log['commands'][0]
-        return janssen_mcm.response.parse(request_type,stdout)
+        return pyjanssen.response.parse(request_type,stdout)
 
         
     def __check_error(self,response,stdout):
@@ -124,7 +124,7 @@ class MCM:
         in Hz, between 0 and 600
         '''
         assert frequency >= 0 and frequency <= 600
-        self.settings['frequency'][str(address)] = frequency
+        self.__settings['frequency'][str(address)] = frequency
         
     def set_step_size(self,address,step_size):
         '''
@@ -133,7 +133,7 @@ class MCM:
         in %, between 0 and 100
         '''
         assert step_size >= 0 and step_size <= 100
-        self.settings['step_size'][str(address)] = step_size
+        self.__settings['step_size'][str(address)] = step_size
         
     def set_temperature(self,address,temperature):
         '''
@@ -142,7 +142,7 @@ class MCM:
         in K, between 0 and 300
         '''
         assert temperature >= 0 and temperature <= 300
-        self.settings['temperature'][str(address)] = temperature
+        self.__settings['temperature'][str(address)] = temperature
         
     def set_steps(self,address,steps):
         '''
@@ -151,7 +151,7 @@ class MCM:
         number, between 0 and 50000
         '''
         assert steps >= 0 and steps <= 50000
-        self.settings['steps'][str(address)] = steps
+        self.__settings['steps'][str(address)] = steps
         
     def set_profile(self,address,profile):
         '''
@@ -159,7 +159,7 @@ class MCM:
         
         name of controller profile
         '''
-        self.settings['profile'][str(address)] = profile
+        self.__settings['profile'][str(address)] = profile
         
 
     def frequency(self,address):
@@ -168,35 +168,35 @@ class MCM:
         
         returns: frequency for given address
         '''
-        return self.settings['frequency'][str(address)]
+        return self.__settings['frequency'][str(address)]
         
     def step_size(self,address):
         '''
         arguments: address
         returns: step_size for given address
         '''
-        return self.settings['step_size'][str(address)]
+        return self.__settings['step_size'][str(address)]
         
     def temperature(self,address):
         '''
         arguments: address
         returns: temperature for given address
         '''
-        return self.settings['temperature'][str(address)]
+        return self.__settings['temperature'][str(address)]
         
     def steps(self,address):
         '''
         arguments: address
         returns: steps for given address
         '''
-        return self.settings['steps'][str(address)]
+        return self.__settings['steps'][str(address)]
         
     def profile(self,address):
         '''
         arguments: address
         returns: profile for given address
         '''
-        return self.settings['profile'][str(address)]        
+        return self.__settings['profile'][str(address)]        
 
         
     def move(self,address,direction,channel=1,**kwargs):
@@ -365,9 +365,9 @@ class MCM:
         '''
         if 'force' in kwargs and kwargs.get('force') == True:
             return
-        if self.servodrive_enabled == desired_state:
+        if self.__servodrive_enabled == desired_state:
             return
-        elif self.servodrive_enabled:
+        elif self.__servodrive_enabled:
             raise CacliError('Servodrive is currently enabled and you sent a non-Servodrive command!')
         else:
             raise CacliError('Servodrive is currently disabled and you sent a Servodrive command!')
@@ -379,7 +379,7 @@ class MCM:
         
         uses values from channel 1 when setting TEMP, TYPE
         '''
-        self.servodrive_enabled = True
+        self.__servodrive_enabled = True
         if 'temperature' in kwargs:
             self.set_temperature('1',kwargs['temperature'])
         if 'profile' in kwargs:
@@ -390,7 +390,7 @@ class MCM:
         '''
         returns: dictionary of STATUS
         '''
-        self.servodrive_enabled = False
+        self.__servodrive_enabled = False
         return self._run('FBXT')
         
     def servodrive_go_to(self,pos1=0,pos2=0,pos3=0,**kwargs):
