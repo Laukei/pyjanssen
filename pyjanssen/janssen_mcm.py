@@ -10,7 +10,9 @@ import os
 import pyjanssen.response
 
 FORWARD = 1
+CW = FORWARD
 BACKWARD = 0
+CCW = BACKWARD
 
 class Counter:
     def __init__(self,value=0):
