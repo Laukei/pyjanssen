@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
 	name = "pyjanssen",
-	version = "0.1",
+	version = "0.1.1",
 	author = "Robert Heath",
 	author_email = "rob@robheath.me.uk",
 	description = "Wrapper for cacli.exe for Janssen Precision Engineering MCM module",

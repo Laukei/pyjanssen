@@ -19,9 +19,9 @@ class Counter:
         super().__init__()
         self.value = value
         
-    def __repr__(self):
+    def get(self):
         self.value += 1
-        return repr(self.value-1)
+        return self.value-1
 
 class MCM:
     def __init__(self,device=None,**kwargs):
@@ -73,8 +73,9 @@ class MCM:
             subprocess_parameters.append('@{}'.format(self.__device))
         subprocess_parameters += command_list
         
-        i = self.__counter
+        i = self.__counter.get()
         self.__command_log[i] = {'parameters':subprocess_parameters, 'commands':command_list}
+        print(i,'\t','_run command log:',self.__command_log)
         response = subprocess.run(subprocess_parameters,
                             stdout = subprocess.PIPE,
                             stderr = subprocess.PIPE,
@@ -96,7 +97,9 @@ class MCM:
             print('args: {}\nstdout: {}\nstderr:{}'.format(response.args,response.stdout.strip(),response.stderr.strip()))
             
         self.__check_error(response,stdout)
+        print(i,'\t','__parse_reply command log:',self.__command_log,'\t','response:',response,'\n')
         this_command_log = self.__command_log.pop(i)
+
         
         # check that the parameters from the log match the parameters from the response
         assert this_command_log['parameters'] == response.args
