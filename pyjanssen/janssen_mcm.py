@@ -75,7 +75,6 @@ class MCM:
         
         i = self.__counter.get()
         self.__command_log[i] = {'parameters':subprocess_parameters, 'commands':command_list}
-        print(i,'\t','_run command log:',self.__command_log)
         response = subprocess.run(subprocess_parameters,
                             stdout = subprocess.PIPE,
                             stderr = subprocess.PIPE,
@@ -97,7 +96,6 @@ class MCM:
             print('args: {}\nstdout: {}\nstderr:{}'.format(response.args,response.stdout.strip(),response.stderr.strip()))
             
         self.__check_error(response,stdout)
-        print(i,'\t','__parse_reply command log:',self.__command_log,'\t','response:',response,'\n')
         this_command_log = self.__command_log.pop(i)
 
         
